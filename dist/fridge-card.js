@@ -1,4 +1,4 @@
-/* Fridge Card v0.4.0-dev — native thermostat control experiment, MIT */
+/* Fridge Card v0.4.1-dev — native thermostat controls, MIT */
 (function FridgeCardNativeDial(){
  const TYPE="fridge-card";
  if(customElements.get(TYPE))return;
@@ -33,7 +33,7 @@
  .foot .warning{color:var(--error-color,#f66)}
  .foot ha-icon{--mdc-icon-size:15px}
  .modes{display:flex;gap:3px;margin:0 12px 12px;padding:4px;border-radius:var(--ha-border-radius-xl,13px);background:var(--secondary-background-color,#292929);border:1px solid var(--divider-color,#404040)}
- .mode{flex:1;min-width:0;height:57px;display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;font:500 11px inherit;font-family:inherit;font-size:11px;border:0;border-radius:10px;background:none;color:var(--secondary-text-color,#b7b7b7);cursor:pointer}
+ .mode{flex:1;min-width:0;height:57px;display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;font-weight:500;font-family:inherit;font-size:11px;border:0;border-radius:10px;background:none;color:var(--secondary-text-color,#b7b7b7);cursor:pointer}
  .mode ha-icon{--mdc-icon-size:22px}
  .mode.active{color:#fff;background:var(--fridge-accent)}
  .mode:focus-visible,.menu:focus-visible,.dial-buttons button:focus-visible{outline:2px solid var(--primary-color,#ff6a00);outline-offset:1px}
@@ -79,7 +79,7 @@
    };
    const door=this._on("fridge_door")||this._on("freezer_door");
    const filter=Number(this._state("filter_usage")?.state);
-   const filterInfo=this._state("filter_usage")&&Number.isFinite(filter)?` · ${Math.round(filter)}% ${esc(labels.filter)}`:"";
+   const filterInfo=this._state("filter_usage")&&Number.isFinite(filter)?` · ${esc(labels.filter)} ${Math.round(filter)} %`:"";
    const modes=[["quick_cool","mdi:snowflake-thermometer"],["quick_freeze","mdi:snowflake-alert"],["ice","mdi:cube-outline"]].filter(([k])=>c.entities[k]);
    this.shadowRoot.innerHTML=`<style>${CSS}</style><ha-card><div class="head"><div class="title">${esc(c.name??"Refrigerator")}</div><button class="menu" data-action="details" aria-label="Options et détails" title="Options et détails"><ha-icon icon="mdi:dots-vertical"></ha-icon></button></div><div class="dials">${dial("fridge_temperature","fridge_setpoint",labels.refrigerator)}${dial("freezer_temperature","freezer_setpoint",labels.freezer)}</div><div class="foot"><span class="${door?"warning":""}"><ha-icon icon="${door?"mdi:door-open":"mdi:door-closed"}"></ha-icon><strong>${esc(door?labels.door_open:labels.doors_closed)}</strong></span><span><ha-icon icon="mdi:flash-outline"></ha-icon><strong>${this._number("power")} W</strong>${filterInfo}</span></div>${modes.length?`<div class="modes">${modes.map(([key,icon])=>`<button class="mode ${this._on(key)?"active":""}" data-action="toggle" data-key="${key}" aria-pressed="${this._on(key)}"><ha-icon icon="${icon}"></ha-icon>${esc(labels[key])}</button>`).join("")}</div>`:""}</ha-card>`;
    for(const slider of this.shadowRoot.querySelectorAll("ha-control-circular-slider")){
