@@ -1,4 +1,4 @@
-/* Fridge Card v0.3.0-dev — thermostat-style modes; MIT */
+/* Fridge Card v0.3.1-dev — native header, auto height; MIT */
 (function FridgeCardV2(){
   const TYPE="fridge-card";
   if(customElements.get(TYPE))return;
@@ -7,11 +7,11 @@
     :host{display:block;--fc-green:#51d99a;--fc-blue:#6abdf0;--fc-amber:#f5b14e;--fc-red:#fb7379}
     *{box-sizing:border-box}
     ha-card{display:block;border:1px solid var(--divider-color,#353535);background:var(--ha-card-background,var(--card-background-color,#1b1b1b));border-radius:16px;overflow:hidden;color:var(--primary-text-color,#fafafa);box-shadow:none}
-    .head{display:flex;align-items:center;gap:11px;padding:11px 14px;border-bottom:1px solid var(--divider-color,#353535)}
+    .head{position:relative;display:flex;align-items:center;justify-content:center;padding:13px 50px 8px;min-height:48px}
     .head-icon{height:34px;width:34px;background:color-mix(in srgb,var(--fc-green) 12%,transparent);color:var(--fc-green);border-radius:10px;display:grid;place-items:center}
-    .title{font-weight:650;font-size:15px}.status{font-size:11px;color:var(--secondary-text-color,#aaa);margin-top:2px;display:flex;align-items:center;gap:5px}
+    .title{font-weight:600;font-size:16px;line-height:1.4;text-align:center}.status{font-size:11px;color:var(--secondary-text-color,#aaa);margin-top:2px;display:flex;align-items:center;gap:5px}
     .status-dot{height:6px;width:6px;background:var(--status);border-radius:50%}
-    .details{margin-left:auto;color:var(--secondary-text-color,#aaa);background:none;border:0;padding:8px;cursor:pointer}
+    .details{position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--secondary-text-color,#aaa);background:none;border:0;padding:8px;border-radius:50%;cursor:pointer}
     .hero{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:12px}
     .tempblock{min-width:0;background:var(--secondary-background-color,#252525);border:1px solid var(--divider-color,#393939);border-radius:12px;padding:11px 10px;display:flex;flex-direction:column;gap:7px}
     .temp-head{color:var(--secondary-text-color,#aaa);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;white-space:nowrap}
@@ -37,8 +37,8 @@
     constructor(){super();this.attachShadow({mode:"open"});this.shadowRoot.addEventListener("click",e=>this._click(e));}
     setConfig(config){if(!config?.entities||(!config.entities.fridge_temperature&&!config.entities.freezer_temperature))throw Error("Fridge Card: fridge_temperature or freezer_temperature is required");this._config=config;this._signature="";this._render();}
     set hass(hass){this._hass=hass;const ids=Object.values(this._config?.entities??{}).filter(x=>typeof x==="string");const signature=ids.map(id=>{const st=hass.states[id];return id+":"+(st?.state??"unknown")+":"+((id.startsWith("number."))?JSON.stringify({min:st?.attributes?.min,max:st?.attributes?.max,step:st?.attributes?.step}):"");}).join("|");if(signature!==this._signature){this._signature=signature;this._render();}}
-    getCardSize(){return 5;}
-    getGridOptions(){return {columns:12,rows:5,min_rows:4};}
+    getCardSize(){return 7;}
+    getGridOptions(){return {columns:12,rows:"auto"};}
     static getStubConfig(){return {name:"Refrigerator",entities:{fridge_temperature:"sensor.fridge_temperature",freezer_temperature:"sensor.freezer_temperature"}};}
     _state(key){const id=this._config?.entities?.[key];return id?this._hass?.states?.[id]??null:null;}
     _number(key,dec=0){const st=this._state(key),val=Number(st?.state);return st&&Number.isFinite(val)?val.toLocaleString(this._hass?.locale?.language??"en",{minimumFractionDigits:dec,maximumFractionDigits:dec}):"—";}
@@ -77,7 +77,7 @@
       };
       const filterState=this._state("filter_usage"),filter=Number(filterState?.state),filterText=filterState&&Number.isFinite(filter)?` · ${Math.round(filter)}% filter`:"";
       const actions=[["quick_cool","mdi:snowflake-thermometer"],["quick_freeze","mdi:snowflake-alert"],["ice","mdi:cube-outline"]].filter(([key])=>c.entities[key]);
-      this.shadowRoot.innerHTML=`<style>${styles}</style><ha-card style="--status:${accent}"><div class="head"><div class="head-icon"><ha-icon icon="mdi:fridge-outline"></ha-icon></div><div><div class="title">${esc(c.name??"Refrigerator")}</div><div class="status"><i class="status-dot"></i>${esc(labels[status])}</div></div><button class="details" data-action="details" aria-label="Details"><ha-icon icon="mdi:chevron-right"></ha-icon></button></div><div class="hero">${temperature("fridge_temperature","fridge_setpoint",labels.refrigerator,"fr")}${temperature("freezer_temperature","freezer_setpoint",labels.freezer,"frz")}</div><div class="metrics"><span class="metric ${door?"alert":""}"><ha-icon icon="${door?"mdi:door-open":"mdi:door-closed"}" style="--mdc-icon-size:15px"></ha-icon><strong>${esc(door?labels.door_open:labels.doors_closed)}</strong></span><span class="metric"><ha-icon icon="mdi:flash-outline" style="--mdc-icon-size:15px"></ha-icon><strong>${this._number("power")} W</strong>${esc(filterText)}</span></div>${actions.length?`<div class="actions">${actions.map(([key,icon])=>`<button class="action ${this._on(key)?"active":""}" data-action="toggle" data-key="${key}" aria-pressed="${this._on(key)}"><ha-icon icon="${icon}" style="--mdc-icon-size:16px"></ha-icon>${esc(labels[key])}</button>`).join("")}</div>`:""}</ha-card>`;
+      this.shadowRoot.innerHTML=`<style>${styles}</style><ha-card style="--status:${accent}"><div class="head"><div class="title">${esc(c.name??"Refrigerator")}</div><button class="details" data-action="details" aria-label="Détails et réglages"><ha-icon icon="mdi:dots-vertical"></ha-icon></button></div><div class="hero">${temperature("fridge_temperature","fridge_setpoint",labels.refrigerator,"fr")}${temperature("freezer_temperature","freezer_setpoint",labels.freezer,"frz")}</div><div class="metrics"><span class="metric ${door?"alert":""}"><ha-icon icon="${door?"mdi:door-open":"mdi:door-closed"}" style="--mdc-icon-size:15px"></ha-icon><strong>${esc(door?labels.door_open:labels.doors_closed)}</strong></span><span class="metric"><ha-icon icon="mdi:flash-outline" style="--mdc-icon-size:15px"></ha-icon><strong>${this._number("power")} W</strong>${esc(filterText)}</span></div>${actions.length?`<div class="actions">${actions.map(([key,icon])=>`<button class="action ${this._on(key)?"active":""}" data-action="toggle" data-key="${key}" aria-pressed="${this._on(key)}"><ha-icon icon="${icon}" style="--mdc-icon-size:16px"></ha-icon>${esc(labels[key])}</button>`).join("")}</div>`:""}</ha-card>`;
     }
   }
   customElements.define(TYPE,FridgeCard);
