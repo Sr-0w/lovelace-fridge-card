@@ -1,8 +1,8 @@
 # Fridge Card for Home Assistant
 
-A compact, device-agnostic Lovelace card with an appliance illustration, fridge/freezer temperatures, door status, instant power, filter usage, and up to three optional switch controls.
+A Home Assistant-themed Lovelace card with two native circular temperature sliders for fridge/freezer setpoints, measured temperatures, door status, power usage and optional segmented appliance modes.
 
-**Status: 0.1.0 development prototype.** The UI has been tested with simulated states, but has **been installed for live Home Assistant testing; visual/device-level testing is still pending**. Please test it as a custom repository before creating a public release.
+**Status: v0.4.0 development prototype.** The UI has been tested with simulated states, but has **been installed for live Home Assistant testing; visual/device-level testing is still pending**. Please test it as a custom repository before creating a public release.
 
 ![Fridge Card concept preview](docs/preview.svg)
 
@@ -52,13 +52,17 @@ labels:
 
 The three optional Power cool / Power freeze / Ice switches appear as a **thermostat-style segmented control** with an orange background for each active switch. They are independent switches: selecting one does not automatically disable another.
 
-Only `fridge_temperature` **or** `freezer_temperature` is required. All other entities are optional; absent controls are hidden. Setpoint controls appear when the optional `fridge_setpoint` and/or `freezer_setpoint` mapping points to a Home Assistant `number.*` entity. The **− / +** buttons read that entity's `min`, `max` and `step` attributes, and call `number.set_value` only after the user presses a button. They do not change temperatures automatically. Door binary sensors are expected to be `on` when open, and the optional filter sensor must report **percentage used**. Power is shown in watts. `quick_cool`, `quick_freeze`, and `ice` must be switch entities.
+Only `fridge_temperature` **or** `freezer_temperature` is required. All other entities are optional; absent controls are hidden. Temperature dials appear when the optional `fridge_setpoint` and/or `freezer_setpoint` mapping points to a Home Assistant `number.*` entity. The card reuses Home Assistant's frontend `<ha-control-circular-slider>` with the `min`, `max`, and `step` limits from that number entity; a small dot marks the measured temperature. Changes are sent using `number.set_value` **only after the user releases the slider**. The matching −/+ controls also change the setpoint one supported step at a time; no device is changed automatically. Door binary sensors are expected to be `on` when open, and the optional filter sensor must report **percentage used**. Power is shown in watts. `quick_cool`, `quick_freeze`, and `ice` must be switch entities.
 
 The configurable `detail_path` links to an **existing** Home Assistant view; the card does not create that view. With no detail path, the button opens entity more-info.
 
+### Frontend compatibility
+
+**Important for future HACS catalog releases:** `ha-control-circular-slider` is an internal component of Home Assistant's frontend, not a separately versioned public card API. It is used by the built-in thermostat, but may be lazy-loaded or changed in other HA versions. The card includes a visual fallback and still offers the −/+ buttons if the native element has not loaded. Test on devices without an existing thermostat card before publishing a stable release. No custom climate entity is required: temperature targets remain ordinary `number.*` entities.
+
 ## Portability and permissions
 
-All entity IDs are supplied in YAML. There is **no manufacturer SDK**, no backend service, and no network request outside Home Assistant's built-in card interface. Actions are sent through `hass.callService('switch', 'toggle', ...)` and use the current HA user's permissions.
+All entity IDs are supplied in YAML. There is **no manufacturer SDK**, no backend service, and no network request outside Home Assistant's built-in card interface. Mode actions use `hass.callService('switch', 'toggle', ...)`; temperature controls use `hass.callService('number', 'set_value', ...)`. Both use the current Home Assistant user's permissions.
 
 ## Planned before HACS catalog submission
 
