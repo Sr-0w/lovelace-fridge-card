@@ -24,6 +24,8 @@ detail_path: /dashboard-maison/cuisine-frigo
 entities:
   fridge_temperature: sensor.my_fridge_temperature
   freezer_temperature: sensor.my_freezer_temperature
+  fridge_setpoint: number.my_fridge_set_temperature
+  freezer_setpoint: number.my_freezer_set_temperature
   fridge_door: binary_sensor.my_fridge_door
   freezer_door: binary_sensor.my_freezer_door
   power: sensor.my_fridge_power
@@ -37,6 +39,7 @@ freezer_warn: -15
 labels:
   refrigerator: Réfrigérateur
   freezer: Congélateur
+  setpoint: Consigne
   normal: Normal
   alert: Alerte
   caution: À surveiller
@@ -47,7 +50,7 @@ labels:
   ice: Glaçons
 ```
 
-Only `fridge_temperature` **or** `freezer_temperature` is required. All other entities are optional; absent controls are hidden. Door binary sensors are expected to be `on` when open, and the optional filter sensor must report **percentage used**. Power is shown in watts. `quick_cool`, `quick_freeze`, and `ice` must be switch entities.
+Only `fridge_temperature` **or** `freezer_temperature` is required. All other entities are optional; absent controls are hidden. Setpoint controls appear when the optional `fridge_setpoint` and/or `freezer_setpoint` mapping points to a Home Assistant `number.*` entity. The **− / +** buttons read that entity's `min`, `max` and `step` attributes, and call `number.set_value` only after the user presses a button. They do not change temperatures automatically. Door binary sensors are expected to be `on` when open, and the optional filter sensor must report **percentage used**. Power is shown in watts. `quick_cool`, `quick_freeze`, and `ice` must be switch entities.
 
 The configurable `detail_path` links to an **existing** Home Assistant view; the card does not create that view. With no detail path, the button opens entity more-info.
 
