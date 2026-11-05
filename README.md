@@ -1,0 +1,1 @@
+# lovelace-fridge-card
