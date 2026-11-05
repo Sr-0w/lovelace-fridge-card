@@ -1,22 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="490" height="341" viewBox="0 0 490 341">
-<rect width="490" height="341" rx="17" fill="#1c1c1c"/><rect x="1" y="1" width="488" height="339" rx="16" stroke="#414141" fill="none"/>
-<text x="22" y="35" fill="#fff" font-family="Arial,sans-serif" font-size="18">Réfrigérateur</text><text x="410" y="35" fill="#5bd6a6" font-family="Arial,sans-serif" font-size="12">● Normal</text>
-<rect x="17" y="58" width="220" height="163" rx="13" fill="#292929" stroke="#444"/>
-<rect x="253" y="58" width="220" height="163" rx="13" fill="#292929" stroke="#444"/>
-<text x="31" y="85" font-family="Arial,sans-serif" fill="#aaa" font-size="13">RÉFRIGÉRATEUR</text>
-<text x="267" y="85" font-family="Arial,sans-serif" fill="#aaa" font-size="13">CONGÉLATEUR</text>
-<text x="33" y="131" font-family="Arial,sans-serif" font-size="33" fill="#6abdf0">3.0 °C</text>
-<text x="269" y="131" font-family="Arial,sans-serif" font-size="33" fill="#a4d9e5">−19 °C</text>
-<text x="32" y="158" font-family="Arial,sans-serif" fill="#aaa" font-size="12">Consigne</text>
-<text x="268" y="158" font-family="Arial,sans-serif" fill="#aaa" font-size="12">Consigne</text>
-<rect x="33" y="168" width="35" height="36" rx="8" fill="#1d1d1d" stroke="#646464"/>
-<rect x="185" y="168" width="35" height="36" rx="8" fill="#1d1d1d" stroke="#646464"/>
-<rect x="269" y="168" width="35" height="36" rx="8" fill="#1d1d1d" stroke="#646464"/>
-<rect x="423" y="168" width="35" height="36" rx="8" fill="#1d1d1d" stroke="#646464"/>
-<g font-family="Arial,sans-serif" font-size="25" fill="#fff" text-anchor="middle"><text x="51" y="195">−</text><text x="203" y="195">+</text><text x="287" y="195">−</text><text x="440" y="195">+</text></g>
-<g font-family="Arial,sans-serif" font-size="16" fill="#fff" text-anchor="middle"><text x="128" y="193">3 °C</text><text x="365" y="193">−19 °C</text></g>
-<text x="25" y="246" fill="#b5b5b5" font-family="Arial,sans-serif" font-size="12">Portes fermées</text><text x="412" y="246" fill="#eee" font-family="Arial,sans-serif" font-size="12">66 W</text>
-<rect x="18" y="261" width="454" height="63" rx="13" fill="#292929" stroke="#444"/>
-<rect x="326" y="265" width="142" height="55" rx="10" fill="#ff6a00"/>
-<g font-family="Arial,sans-serif" font-size="13" text-anchor="middle"><text x="98" y="289" fill="#bbb">✳</text><text x="98" y="307" fill="#bbb">Froid+</text><text x="246" y="289" fill="#bbb">✳</text><text x="246" y="307" fill="#bbb">Congél+</text><text x="398" y="289" fill="#fff">◈</text><text x="398" y="307" fill="#fff">Glaçons</text></g>
+<svg xmlns="http://www.w3.org/2000/svg" width="490" height="380" viewBox="0 0 490 380">
+<rect width="490" height="380" rx="18" fill="#1d1d1d"/><rect x="1" y="1" width="488" height="378" rx="17" fill="none" stroke="#464646"/>
+<text x="245" y="33" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#fff">Réfrigérateur</text>
+<g fill="none" stroke="#393939" stroke-width="10" stroke-linecap="round">
+<path d="M83 217 A82 82 0 1 1 203 217"/><path d="M287 217 A82 82 0 1 1 407 217"/>
+</g>
+<g fill="none" stroke="#ff6a00" stroke-width="10" stroke-linecap="round">
+<path d="M83 217 A82 82 0 0 1 110 93"/><path d="M287 217 A82 82 0 0 1 329 80"/>
+</g>
+<circle cx="110" cy="93" r="7" fill="#fff"/><circle cx="329" cy="80" r="7" fill="#fff"/>
+<text x="143" y="75" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#bcbcbc">Réfrigérateur</text>
+<text x="347" y="75" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#bcbcbc">Congélateur</text>
+<text x="143" y="153" text-anchor="middle" font-family="Arial,sans-serif" font-size="35" fill="#fff">3°</text>
+<text x="347" y="153" text-anchor="middle" font-family="Arial,sans-serif" font-size="35" fill="#fff">−19°</text>
+<text x="143" y="176" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#aaa">Mesurée : 3 °C</text>
+<text x="347" y="176" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#aaa">Mesurée : −19 °C</text>
+<g fill="#272727" stroke="#666">
+<circle cx="103" cy="215" r="17"/><circle cx="183" cy="215" r="17"/><circle cx="307" cy="215" r="17"/><circle cx="387" cy="215" r="17"/>
+</g>
+<g fill="#fff" font-family="Arial,sans-serif" font-size="25" text-anchor="middle">
+<text x="103" y="223">−</text><text x="183" y="223">+</text><text x="307" y="223">−</text><text x="387" y="223">+</text>
+</g>
+<text x="25" y="274" font-family="Arial,sans-serif" font-size="13" fill="#e3e3e3">Portes fermées</text><text x="438" y="274" text-anchor="end" font-family="Arial,sans-serif" font-size="13" fill="#e3e3e3">58 W</text>
+<rect x="15" y="288" width="460" height="75" rx="13" fill="#2b2b2b" stroke="#4a4a4a"/>
+<rect x="322" y="292" width="148" height="67" rx="10" fill="#ff6a00"/>
+<g font-family="Arial,sans-serif" font-size="14" text-anchor="middle"><text x="91" y="318" fill="#aaa">❄</text><text x="91" y="341" fill="#ddd">Froid+</text><text x="245" y="318" fill="#aaa">❄</text><text x="245" y="341" fill="#ddd">Congél+</text><text x="396" y="318" fill="#fff">◇</text><text x="396" y="341" fill="#fff">Glaçons</text></g>
 </svg>
