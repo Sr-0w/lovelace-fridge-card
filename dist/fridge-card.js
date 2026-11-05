@@ -109,3 +109,84 @@
  window.customCards=window.customCards||[];
  window.customCards.push({type:TYPE,name:"Fridge Card",description:"Dual Home Assistant native circular thermostat controls for fridge and freezer",preview:false,documentationURL:"https://github.com/Sr-0w/lovelace-fridge-card"});
 })();
+
+
+/* Visual editor: uses Home Assistant's ha-form and entity/select selectors. */
+(function registerVisualEditor(){
+  const TYPE="fridge-card",EDITOR=TYPE+"-editor";
+  const Card=customElements.get(TYPE);
+  if(!Card||customElements.get(EDITOR))return;
+  const SPEC=[{"title":"Général","fields":[{"path":"name","label":"Nom de l’appareil","kind":"text"},{"path":"detail_path","label":"Navigation vers la vue détaillée","kind":"text"},{"path":"show_header","label":"Afficher le titre","kind":"bool","default":true},{"path":"show_measured","label":"Température mesurée","kind":"bool","default":true},{"path":"show_doors","label":"État des portes","kind":"bool","default":true},{"path":"show_power","label":"Puissance instantanée","kind":"bool","default":true},{"path":"show_filter","label":"Indicateur du filtre","kind":"bool","default":true},{"path":"show_modes","label":"Afficher les modes","kind":"bool","default":true}]},{"title":"Entités — réfrigérateur et congélateur","fields":[{"path":"entities.fridge_temperature","label":"Température mesurée du réfrigérateur","kind":"entity","domain":"sensor"},{"path":"entities.fridge_setpoint","label":"Consigne du réfrigérateur","kind":"entity","domain":"number"},{"path":"entities.freezer_temperature","label":"Température mesurée du congélateur","kind":"entity","domain":"sensor"},{"path":"entities.freezer_setpoint","label":"Consigne du congélateur","kind":"entity","domain":"number"},{"path":"entities.fridge_door","label":"Contact de porte du réfrigérateur","kind":"entity","domain":"binary_sensor"},{"path":"entities.freezer_door","label":"Contact de porte du congélateur","kind":"entity","domain":"binary_sensor"},{"path":"entities.power","label":"Puissance de l’appareil","kind":"entity","domain":"sensor"},{"path":"entities.filter_usage","label":"Usure du filtre (%)","kind":"entity","domain":"sensor"},{"path":"entities.quick_cool","label":"Mode Froid+","kind":"entity","domain":"switch"},{"path":"entities.quick_freeze","label":"Mode Congélation rapide","kind":"entity","domain":"switch"},{"path":"entities.ice","label":"Production de glaçons","kind":"entity","domain":"switch"}]},{"title":"Couleurs et apparence","fields":[{"path":"colors.accent","label":"Couleur de l’arc et du mode actif","kind":"color","default":"#009FCA"},{"path":"colors.fridge","label":"Couleur cadran frigo (optionnel)","kind":"color"},{"path":"colors.freezer","label":"Couleur cadran congélateur (optionnel)","kind":"color"},{"path":"colors.track","label":"Couleur de piste du cadran","kind":"color"},{"path":"colors.text","label":"Couleur des chiffres (optionnel)","kind":"color"},{"path":"colors.warning","label":"Couleur d’alerte","kind":"color","default":"#EF5350"},{"path":"appearance.dial_size","label":"Taille maximale des cadrans (px)","kind":"number","default":300,"min":120,"max":500},{"path":"appearance.dial_gap","label":"Espacement entre cadrans (px)","kind":"number","default":0,"min":0,"max":40},{"path":"appearance.button_size","label":"Taille des boutons ± (px)","kind":"number","default":32,"min":24,"max":60},{"path":"appearance.mode_height","label":"Hauteur des boutons de modes (px)","kind":"number","default":57,"min":30,"max":110},{"path":"appearance.mode_icon_size","label":"Taille des icônes de modes (px)","kind":"number","default":22,"min":12,"max":44}]},{"title":"Modes — icônes et boutons","fields":[{"path":"mode_icons.quick_cool","label":"Icône Froid+ (mdi:...)","kind":"text"},{"path":"mode_icons.quick_freeze","label":"Icône Congél+ (mdi:...)","kind":"text"},{"path":"mode_icons.ice","label":"Icône Glaçons (mdi:...)","kind":"text"},{"path":"mode_order","label":"Ordre des modes (séparés par des virgules)","kind":"text"},{"path":"extra_modes","label":"Modes additionnels (entité | libellé | mdi:icône)","kind":"modes"}]},{"title":"Libellés et seuils","fields":[{"path":"labels.refrigerator","label":"Libellé frigo","kind":"text"},{"path":"labels.freezer","label":"Libellé congélateur","kind":"text"},{"path":"labels.quick_cool","label":"Libellé Froid+","kind":"text"},{"path":"labels.quick_freeze","label":"Libellé Congél+","kind":"text"},{"path":"labels.ice","label":"Libellé Glaçons","kind":"text"},{"path":"labels.doors_closed","label":"Libellé portes fermées","kind":"text"},{"path":"labels.door_open","label":"Libellé porte ouverte","kind":"text"},{"path":"labels.filter","label":"Libellé du filtre","kind":"text"},{"path":"fridge_warn","label":"Seuil d’alerte frigo (°C)","kind":"number","default":7,"min":-5,"max":30},{"path":"freezer_warn","label":"Seuil d’alerte congélateur (°C)","kind":"number","default":-15,"min":-50,"max":0}]}];
+  const toKey=path=>path.replaceAll(".","__");
+  const get=(obj,path)=>path.split(".").reduce((a,k)=>a?.[k],obj);
+  const put=(obj,path,value)=>{
+    const keys=path.split("."),stack=[obj];let at=obj;
+    for(const k of keys.slice(0,-1)){if(!at[k]||typeof at[k]!=="object"||Array.isArray(at[k]))at[k]={};at=at[k];stack.push(at);}
+    const key=keys.at(-1);
+    if(value===undefined||value===null||value==="")delete at[key];else at[key]=value;
+    for(let i=keys.length-2;i>=0;i--){if(Object.keys(stack[i+1]).length===0)delete stack[i][keys[i]];}
+  };
+  const mapAsText=v=>Object.entries(v&&typeof v==="object"&&!Array.isArray(v)?v:{}).map(([k,x])=>k+": "+String(x)).join("\n");
+  const parseMap=s=>{const out={};for(const line of String(s??"").split(/\r?\n/)){const i=line.indexOf(":");if(i<1)continue;const key=line.slice(0,i).trim(),v=line.slice(i+1).trim();if(/^[\w.-]+$/.test(key)&&v)out[key]=v;}return out};
+  const modesAsText=v=>(Array.isArray(v)?v:[]).map(m=>[m.entity??"",m.label??"",m.icon??"mdi:power"].join(" | ")).join("\n");
+  const parseModes=s=>String(s??"").split(/\r?\n/).map(l=>l.split("|").map(x=>x.trim())).filter(v=>/^(switch|input_boolean)\.[\w]+$/.test(v[0]??"")).map(([entity,label,icon])=>({entity,label:label||entity.split(".").at(-1),icon:icon||"mdi:power"}));
+  const safeColor=s=>typeof s==="string"&&/^#[\da-f]{3,8}$/i.test(s)?s:"#ff6a00";
+  class CardVisualEditor extends HTMLElement {
+    constructor(){super();this.attachShadow({mode:"open"});this._config={type:"custom:"+TYPE};this._hass=undefined;this._rendered=false;}
+    setConfig(config){this._config=JSON.parse(JSON.stringify(config??{type:"custom:"+TYPE}));this._render();}
+    set hass(hass){this._hass=hass;if(!this._rendered)this._render();else for(const form of this.shadowRoot.querySelectorAll("ha-form"))form.hass=hass;}
+    _options(){
+      if(TYPE!=="dishwasher-card")return [];
+      const id=this._config.entities?.program;
+      const options=this._hass?.states?.[id]?.attributes?.options;
+      const list=[...(Array.isArray(options)?options:[]),...(this._config.program_presets??[])];
+      return [...new Set(list.filter(x=>typeof x==="string"&&x.trim()))].map(code=>({value:code,label:this._config.program_labels?.[code]??code.replaceAll("_"," ")}));
+    }
+    _fieldSchema(field){
+      const schema={name:toKey(field.path)};
+      if(field.kind==="entity")schema.selector={entity:field.domain?{filter:{domain:field.domain}}:{}};
+      else if(field.kind==="bool")schema.selector={boolean:{}};
+      else if(field.kind==="number")schema.selector={number:{min:field.min??0,max:field.max??500,step:field.step??1,mode:"box"}};
+      else if(field.kind==="multi"){const opts=this._options();schema.selector={select:{options:opts.length?opts:[{value:"eco",label:"eco"}],multiple:true,reorder:true,mode:"dropdown"}};}
+      else schema.selector={text:field.kind==="map"||field.kind==="modes"?{multiline:true}:{}};
+      return schema;
+    }
+    _fieldValue(f){
+      const v=get(this._config,f.path);
+      return f.kind==="map"?mapAsText(v):f.kind==="modes"?modesAsText(v):f.kind==="multi"?(Array.isArray(v)?v:[]):v??f.default;
+    }
+    _onForm(group,values){
+      const next=JSON.parse(JSON.stringify(this._config));
+      for(const f of group.fields){
+        const key=toKey(f.path);if(!Object.prototype.hasOwnProperty.call(values,key))continue;
+        let value=values[key];
+        if(f.kind==="map")value=parseMap(value);
+        if(f.kind==="modes")value=parseModes(value);
+        if(f.kind==="multi")value=Array.isArray(value)?value:[];
+        if(f.kind==="number"&&value!=="")value=Number(value);
+        put(next,f.path,value);
+      }
+      this._config=next;
+      this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:next},bubbles:true,composed:true}));
+    }
+    _render(){
+      if(!this.isConnected&&!this._hass)return;
+      const html=SPEC.map((group,i)=>'<details '+(i===0||i===1?'open':'')+'><summary>'+group.title+'</summary><div class="content"><ha-form data-group="'+i+'"></ha-form></div></details>').join("");
+      this.shadowRoot.innerHTML='<style>:host{display:block;color:var(--primary-text-color)}details{border:1px solid var(--divider-color);border-radius:var(--ha-border-radius-md,10px);margin:8px 0;overflow:hidden}summary{padding:14px;font-size:14px;font-weight:600;cursor:pointer;background:var(--secondary-background-color)}.content{padding:14px}ha-form{display:block}ha-form::part(root){display:block}summary:focus-visible{outline:2px solid var(--primary-color)}</style>'+html;
+      this._rendered=true;
+      SPEC.forEach((group,i)=>{
+        const form=this.shadowRoot.querySelector('ha-form[data-group="'+i+'"]');
+        if(!form)return;
+        form.hass=this._hass;
+        form.schema=group.fields.map(f=>this._fieldSchema(f));
+        form.data=Object.fromEntries(group.fields.map(f=>[toKey(f.path),this._fieldValue(f)]).filter(([,v])=>v!==undefined));
+        form.computeLabel=schema=>group.fields.find(f=>toKey(f.path)===schema.name)?.label??schema.name;
+        form.computeHelper=schema=>group.fields.find(f=>toKey(f.path)===schema.name)?.help;
+        form.addEventListener("value-changed",ev=>{ev.stopPropagation();if(ev.detail?.value&&typeof ev.detail.value==="object")this._onForm(group,ev.detail.value);});
+      });
+    }
+    connectedCallback(){if(!this._rendered)this._render();}
+  }
+  customElements.define(EDITOR,CardVisualEditor);
+  Card.getConfigElement=()=>document.createElement(EDITOR);
+})();
