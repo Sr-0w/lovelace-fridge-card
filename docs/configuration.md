@@ -21,6 +21,10 @@ The editor is divided into **General**, **Entities**, **Colors and appearance**,
 
 At least one temperature sensor is required. Other entities are optional, and absent controls disappear.
 
+### Cooling arc direction
+
+The native Home Assistant circular slider defaults to **cooling arc mode** (`appearance.cooling_arc: true`), using its built-in `mode="end"`. The filled track runs **from the target toward the warmer maximum**, and the highlighted interval represents cooling demand when the measured temperature is warmer than the target. The slider still reads and writes the **actual numeric temperature**: the + button increases the temperature setpoint (e.g. −19 → −18 °C), and − decreases it (−19 → −20 °C). Nothing reverses the number entity or its service call. Disable **Cooling arc** in the card editor if using this card with a system requiring a heating-style track (`mode="start"`).
+
 ### Colors, dimensions, information
 
 Configure `colors.accent` (active buttons), `colors.fridge`, `colors.freezer` (circular arcs), `colors.track`, `colors.text`, `colors.warning`, and `colors.caution`. Use the color picker for hex colors, or type a CSS theme variable such as `var(--primary-color)` in the text field.
