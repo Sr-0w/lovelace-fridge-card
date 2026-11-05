@@ -1,86 +1,98 @@
-/* Fridge Card v0.3.1-dev — native header, auto height; MIT */
-(function FridgeCardV2(){
-  const TYPE="fridge-card";
-  if(customElements.get(TYPE))return;
-  const esc=v=>String(v??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
-  const styles=`
-    :host{display:block;--fc-green:#51d99a;--fc-blue:#6abdf0;--fc-amber:#f5b14e;--fc-red:#fb7379}
-    *{box-sizing:border-box}
-    ha-card{display:block;border:1px solid var(--divider-color,#353535);background:var(--ha-card-background,var(--card-background-color,#1b1b1b));border-radius:16px;overflow:hidden;color:var(--primary-text-color,#fafafa);box-shadow:none}
-    .head{position:relative;display:flex;align-items:center;justify-content:center;padding:13px 50px 8px;min-height:48px}
-    .head-icon{height:34px;width:34px;background:color-mix(in srgb,var(--fc-green) 12%,transparent);color:var(--fc-green);border-radius:10px;display:grid;place-items:center}
-    .title{font-weight:600;font-size:16px;line-height:1.4;text-align:center}.status{font-size:11px;color:var(--secondary-text-color,#aaa);margin-top:2px;display:flex;align-items:center;gap:5px}
-    .status-dot{height:6px;width:6px;background:var(--status);border-radius:50%}
-    .details{position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--secondary-text-color,#aaa);background:none;border:0;padding:8px;border-radius:50%;cursor:pointer}
-    .hero{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:12px}
-    .tempblock{min-width:0;background:var(--secondary-background-color,#252525);border:1px solid var(--divider-color,#393939);border-radius:12px;padding:11px 10px;display:flex;flex-direction:column;gap:7px}
-    .temp-head{color:var(--secondary-text-color,#aaa);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;white-space:nowrap}
-    .tempval{font-size:30px;font-weight:600;line-height:1.18;letter-spacing:-.04em;font-variant-numeric:tabular-nums;white-space:nowrap}
-    .tempval span{font-size:13px;color:var(--secondary-text-color,#aaa);letter-spacing:0;margin-left:2px}.tempval.fr{color:var(--fc-blue)}.tempval.frz{color:#addce5}
-    .set-label{font-size:10px;color:var(--secondary-text-color,#aaa)}.setpoint{display:flex;align-items:center;justify-content:space-between;gap:3px}
-    .setpoint-value{font-size:12px;font-weight:650;white-space:nowrap;font-variant-numeric:tabular-nums}
-    .step{height:30px;min-width:30px;border:1px solid var(--divider-color,#454545);border-radius:9px;display:grid;place-items:center;background:var(--card-background-color,#222);color:var(--primary-text-color,#eee);font-size:20px;cursor:pointer;touch-action:manipulation}
-    .step:disabled{opacity:.26;cursor:not-allowed}.step:not(:disabled):active{transform:scale(.94);background:color-mix(in srgb,var(--fc-blue) 12%,var(--card-background-color,#222))}
-    .metrics{display:flex;justify-content:space-between;gap:7px;padding:0 13px 12px;color:var(--secondary-text-color,#aaa);font-size:11px}
-    .metric{display:flex;align-items:center;gap:5px;min-width:0;white-space:nowrap}.metric strong{color:var(--primary-text-color,#eee);font-weight:650}.metric.alert strong{color:var(--fc-red)}
-
-    .actions{margin:1px 12px 12px;padding:4px;background:var(--secondary-background-color,#292929);border:1px solid var(--divider-color,#3b3b3b);border-radius:13px;display:flex;gap:3px;overflow:hidden}
-    .action{height:57px;flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:0;border-radius:10px;background:transparent;color:var(--secondary-text-color,#c0c0c0);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background-color .15s,color .15s,transform .12s}
-    .action ha-icon{--mdc-icon-size:23px!important}
-    .action.active{color:#fff;background:var(--fc-active-color,#ff6a00);box-shadow:0 2px 7px rgba(0,0,0,.14)}
-    .action:disabled{opacity:.35;cursor:not-allowed}
-    .action:focus-visible{outline:2px solid var(--primary-color,#ff6a00);outline-offset:-2px}
-    .action:active{transform:scale(.98)}
-    @media(max-width:355px){.hero{gap:6px;padding:9px}.tempblock{padding:8px 6px}.tempval{font-size:25px}.step{height:26px;min-width:25px}.setpoint-value{font-size:11px}.action{font-size:10px;gap:2px}.metrics{font-size:10px}}
-  `;
-  class FridgeCard extends HTMLElement{
-    constructor(){super();this.attachShadow({mode:"open"});this.shadowRoot.addEventListener("click",e=>this._click(e));}
-    setConfig(config){if(!config?.entities||(!config.entities.fridge_temperature&&!config.entities.freezer_temperature))throw Error("Fridge Card: fridge_temperature or freezer_temperature is required");this._config=config;this._signature="";this._render();}
-    set hass(hass){this._hass=hass;const ids=Object.values(this._config?.entities??{}).filter(x=>typeof x==="string");const signature=ids.map(id=>{const st=hass.states[id];return id+":"+(st?.state??"unknown")+":"+((id.startsWith("number."))?JSON.stringify({min:st?.attributes?.min,max:st?.attributes?.max,step:st?.attributes?.step}):"");}).join("|");if(signature!==this._signature){this._signature=signature;this._render();}}
-    getCardSize(){return 7;}
-    getGridOptions(){return {columns:12,rows:"auto"};}
-    static getStubConfig(){return {name:"Refrigerator",entities:{fridge_temperature:"sensor.fridge_temperature",freezer_temperature:"sensor.freezer_temperature"}};}
-    _state(key){const id=this._config?.entities?.[key];return id?this._hass?.states?.[id]??null:null;}
-    _number(key,dec=0){const st=this._state(key),val=Number(st?.state);return st&&Number.isFinite(val)?val.toLocaleString(this._hass?.locale?.language??"en",{minimumFractionDigits:dec,maximumFractionDigits:dec}):"—";}
-    _on(key){return this._state(key)?.state==="on";}
-    _moreInfo(id){if(id)this.dispatchEvent(new CustomEvent("hass-more-info",{detail:{entityId:id},bubbles:true,composed:true}));}
-    _click(e){
-      const button=e.target.closest("[data-action]");if(!button)return;
-      const action=button.dataset.action;
-      if(action==="details"){if(this._config.detail_path){history.pushState(null,"",this._config.detail_path);window.dispatchEvent(new Event("location-changed"));}else this._moreInfo(this._config.entities.fridge_temperature??this._config.entities.freezer_temperature);return;}
-      if(action==="step"){
-        const key=button.dataset.key,id=this._config.entities[key],st=this._state(key);
-        if(!id?.startsWith("number.")||!st||!Number.isFinite(Number(st.state)))return;
-        const a=st.attributes??{},current=Number(st.state),min=Number.isFinite(Number(a.min))?Number(a.min):-Infinity,max=Number.isFinite(Number(a.max))?Number(a.max):Infinity,step=Number(a.step)>0?Number(a.step):1,delta=Number(button.dataset.delta);
-        if(delta!==1&&delta!==-1)return;
-        const value=Number(Math.min(max,Math.max(min,current+step*delta)).toFixed(4));
-        if(value===current)return;
-        button.disabled=true;
-        Promise.resolve(this._hass.callService("number","set_value",{entity_id:id,value})).catch(err=>console.error("Fridge Card: setpoint failed",err)).finally(()=>{if(button.isConnected)button.disabled=false;});
-        return;
-      }
-      if(action==="toggle"){const id=this._config.entities[button.dataset.key];if(id?.startsWith("switch.")&&this._hass.states[id])Promise.resolve(this._hass.callService("switch","toggle",{entity_id:id})).catch(err=>console.error("Fridge Card: switch failed",err));}
-    }
-    _render(){
-      if(!this._config||!this._hass)return;
-      const c=this._config,door=this._on("fridge_door")||this._on("freezer_door"),fr=Number(this._state("fridge_temperature")?.state),fz=Number(this._state("freezer_temperature")?.state);
-      const unknown=["fridge_temperature","freezer_temperature"].every(k=>!this._state(k)||["unknown","unavailable"].includes(this._state(k)?.state));
-      const unsafe=door||(!unknown&&Number.isFinite(fr)&&fr>(c.fridge_warn??7))||(!unknown&&Number.isFinite(fz)&&fz>(c.freezer_warn??-15));
-      const status=unknown?"unavailable":unsafe?"alert":(Number.isFinite(fr)&&fr>(c.fridge_caution??5))?"caution":"normal";
-      const labels={normal:"Normal",alert:"Alert",caution:"Caution",unavailable:"Unavailable",door_open:"Door open",doors_closed:"Doors closed",refrigerator:"Refrigerator",freezer:"Freezer",setpoint:"Setpoint",quick_cool:"Power cool",quick_freeze:"Power freeze",ice:"Ice",...(c.labels??{})};
-      const accent=status==="alert"?"var(--fc-red)":status==="caution"?"var(--fc-amber)":status==="unavailable"?"var(--secondary-text-color,#888)":"var(--fc-green)";
-      const temperature=(sensorKey,setpointKey,label,css)=>{
-        const st=this._state(setpointKey),id=c.entities[setpointKey],valid=!!st&&id?.startsWith("number.")&&Number.isFinite(Number(st.state));
-        const a=st?.attributes??{},current=valid?Number(st.state):NaN,min=Number.isFinite(Number(a.min))?Number(a.min):-Infinity,max=Number.isFinite(Number(a.max))?Number(a.max):Infinity,step=Number(a.step)>0?Number(a.step):1;
-        const control=valid?`<div class="set-label">${esc(labels.setpoint)}</div><div class="setpoint"><button class="step" data-action="step" data-key="${setpointKey}" data-delta="-1" aria-label="${esc(label)} −" ${current-step<min?"disabled":""}>−</button><span class="setpoint-value">${this._number(setpointKey)} °C</span><button class="step" data-action="step" data-key="${setpointKey}" data-delta="1" aria-label="${esc(label)} +" ${current+step>max?"disabled":""}>+</button></div>`:"";
-        return `<div class="tempblock"><div class="temp-head">${esc(label)}</div><div class="tempval ${css}">${this._number(sensorKey,css==="fr"?1:0)}<span>°C</span></div>${control}</div>`;
-      };
-      const filterState=this._state("filter_usage"),filter=Number(filterState?.state),filterText=filterState&&Number.isFinite(filter)?` · ${Math.round(filter)}% filter`:"";
-      const actions=[["quick_cool","mdi:snowflake-thermometer"],["quick_freeze","mdi:snowflake-alert"],["ice","mdi:cube-outline"]].filter(([key])=>c.entities[key]);
-      this.shadowRoot.innerHTML=`<style>${styles}</style><ha-card style="--status:${accent}"><div class="head"><div class="title">${esc(c.name??"Refrigerator")}</div><button class="details" data-action="details" aria-label="Détails et réglages"><ha-icon icon="mdi:dots-vertical"></ha-icon></button></div><div class="hero">${temperature("fridge_temperature","fridge_setpoint",labels.refrigerator,"fr")}${temperature("freezer_temperature","freezer_setpoint",labels.freezer,"frz")}</div><div class="metrics"><span class="metric ${door?"alert":""}"><ha-icon icon="${door?"mdi:door-open":"mdi:door-closed"}" style="--mdc-icon-size:15px"></ha-icon><strong>${esc(door?labels.door_open:labels.doors_closed)}</strong></span><span class="metric"><ha-icon icon="mdi:flash-outline" style="--mdc-icon-size:15px"></ha-icon><strong>${this._number("power")} W</strong>${esc(filterText)}</span></div>${actions.length?`<div class="actions">${actions.map(([key,icon])=>`<button class="action ${this._on(key)?"active":""}" data-action="toggle" data-key="${key}" aria-pressed="${this._on(key)}"><ha-icon icon="${icon}" style="--mdc-icon-size:16px"></ha-icon>${esc(labels[key])}</button>`).join("")}</div>`:""}</ha-card>`;
-    }
+/* Fridge Card v0.4.0-dev — native thermostat control experiment, MIT */
+(function FridgeCardNativeDial(){
+ const TYPE="fridge-card";
+ if(customElements.get(TYPE))return;
+ const esc=v=>String(v??"").replace(/[&<>"']/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[x]));
+ const CSS=`
+ :host{display:block;--fridge-accent:var(--primary-color,#ff6a00)}
+ *{box-sizing:border-box}
+ ha-card{display:block;border:1px solid var(--divider-color,#383838);border-radius:var(--ha-card-border-radius,16px);background:var(--ha-card-background,var(--card-background-color,#1b1b1b));color:var(--primary-text-color,#fafafa);overflow:hidden;box-shadow:none}
+ .head{position:relative;display:flex;justify-content:center;align-items:center;min-height:47px;padding:11px 50px 5px}
+ .title{font-size:16px;font-weight:500;line-height:1.4;text-align:center}
+ .menu{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--secondary-text-color,#aaa);border-radius:50%;width:36px;height:36px;display:grid;place-items:center;cursor:pointer}
+ .dials{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:3px 11px 8px}
+ .temp{display:flex;align-items:center;flex-direction:column;min-width:0}
+ .temp-name{font-size:12px;color:var(--secondary-text-color,#aaa);font-weight:500;padding:5px 0 0}
+ .dial-frame{position:relative;width:100%;max-width:182px;aspect-ratio:1/1;min-width:0}
+ ha-control-circular-slider{display:block;position:absolute;inset:0;width:100%;height:100%;--control-circular-slider-color:var(--fridge-accent);--control-circular-slider-background:var(--slider-track-color,#393939);--control-circular-slider-background-opacity:1}
+ .dial-info{position:absolute;top:36%;left:0;right:0;text-align:center;pointer-events:none}
+ .target{font-size:clamp(24px,6vw,36px);font-weight:500;letter-spacing:-.035em;line-height:1.1;font-variant-numeric:tabular-nums}
+ .target .unit{font-size:14px;letter-spacing:0;vertical-align:top;margin-left:2px}
+ .actual{font-size:10px;color:var(--secondary-text-color,#aaa);margin-top:5px;white-space:nowrap}
+ .dial-buttons{position:absolute;bottom:0;left:13%;right:13%;display:flex;justify-content:space-between;align-items:center}
+ .dial-buttons button{display:grid;place-items:center;width:35px;height:35px;border:1px solid var(--divider-color,#5d5d5d);background:var(--card-background-color,#252525);border-radius:50%;color:var(--primary-text-color,#eee);font-family:inherit;font-weight:300;font-size:24px;cursor:pointer;touch-action:manipulation;z-index:2}
+ .dial-buttons button:disabled{opacity:.27;cursor:not-allowed}
+ .dial-buttons button:active:not(:disabled){background:var(--secondary-background-color,#444);transform:scale(.96)}
+ .fallback-track{display:none;position:absolute;inset:10px 10px 35px;border:7px solid var(--divider-color,#484848);border-bottom-color:transparent;border-radius:50%}
+ ha-control-circular-slider:not(:defined){display:none}
+ ha-control-circular-slider:not(:defined)+.fallback-track{display:block}
+ .empty-setpoint{font-size:11px;color:var(--secondary-text-color,#aaa);text-align:center;margin-top:5px}
+ .foot{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:7px 15px 12px;color:var(--secondary-text-color,#aaa);font-size:11px}
+ .foot span{display:inline-flex;align-items:center;gap:5px;min-width:0;white-space:nowrap}
+ .foot strong{color:var(--primary-text-color,#fff);font-weight:500}
+ .foot .warning{color:var(--error-color,#f66)}
+ .foot ha-icon{--mdc-icon-size:15px}
+ .modes{display:flex;gap:3px;margin:0 12px 12px;padding:4px;border-radius:var(--ha-border-radius-xl,13px);background:var(--secondary-background-color,#292929);border:1px solid var(--divider-color,#404040)}
+ .mode{flex:1;min-width:0;height:57px;display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;font:500 11px inherit;font-family:inherit;font-size:11px;border:0;border-radius:10px;background:none;color:var(--secondary-text-color,#b7b7b7);cursor:pointer}
+ .mode ha-icon{--mdc-icon-size:22px}
+ .mode.active{color:#fff;background:var(--fridge-accent)}
+ .mode:focus-visible,.menu:focus-visible,.dial-buttons button:focus-visible{outline:2px solid var(--primary-color,#ff6a00);outline-offset:1px}
+ @media(max-width:390px){.dials{padding:3px 8px 8px;gap:1px}.dial-buttons button{width:31px;height:31px}.target{font-size:28px}.mode{font-size:10px}}
+ `;
+ class FridgeCard extends HTMLElement{
+  constructor(){super();this.attachShadow({mode:"open"});this.shadowRoot.addEventListener("click",e=>this._click(e));this._dragging=false;}
+  setConfig(config){if(!config?.entities||(!config.entities.fridge_temperature&&!config.entities.freezer_temperature))throw Error("Fridge Card requires a fridge or freezer temperature entity");this._config=config;this._sig="";this._render();}
+  set hass(hass){this._hass=hass;const ent=this._config?.entities??{};const sig=Object.values(ent).filter(x=>typeof x==="string").map(id=>{const s=hass.states[id];return id+":"+(s?.state??"")+":"+(id.startsWith("number.")?JSON.stringify({min:s?.attributes?.min,max:s?.attributes?.max,step:s?.attributes?.step}):"")}).join("|");if(sig!==this._sig){this._sig=sig;if(!this._dragging)this._render();}}
+  getCardSize(){return 7;}
+  getGridOptions(){return {columns:12,rows:"auto"};}
+  static getStubConfig(){return {name:"Refrigerator",entities:{fridge_temperature:"sensor.fridge_temperature",freezer_temperature:"sensor.freezer_temperature"}};}
+  _state(key){const id=this._config?.entities?.[key];return id?this._hass?.states?.[id]??null:null;}
+  _number(key,dec=0){const s=this._state(key),n=Number(s?.state);return s&&!["unknown","unavailable"].includes(s.state)&&Number.isFinite(n)?n.toLocaleString(this._hass?.locale?.language??"en",{minimumFractionDigits:dec,maximumFractionDigits:dec}):"—";}
+  _on(key){return this._state(key)?.state==="on";}
+  _moreInfo(id){if(id)this.dispatchEvent(new CustomEvent("hass-more-info",{detail:{entityId:id},bubbles:true,composed:true}));}
+  _navigate(){if(this._config.detail_path){history.pushState(null,"",this._config.detail_path);window.dispatchEvent(new Event("location-changed"));}else this._moreInfo(this._config.entities.fridge_temperature??this._config.entities.freezer_temperature);}
+  _bounds(st){const a=st?.attributes??{};return {min:Number.isFinite(Number(a.min))?Number(a.min):0,max:Number.isFinite(Number(a.max))?Number(a.max):100,step:Number(a.step)>0?Number(a.step):1};}
+  _setTemperature(key,value){
+   const entity_id=this._config.entities[key],st=this._state(key);
+   if(!entity_id?.startsWith("number.")||!st||["unavailable","unknown"].includes(st.state))return;
+   const {min,max,step}=this._bounds(st),n=Number(value);
+   if(!Number.isFinite(n))return;
+   const rounded=Number(Math.min(max,Math.max(min,min+Math.round((n-min)/step)*step)).toFixed(4));
+   if(rounded===Number(st.state))return;
+   Promise.resolve(this._hass.callService("number","set_value",{entity_id,value:rounded})).catch(err=>console.error("Fridge Card: setpoint",err));
   }
-  customElements.define(TYPE,FridgeCard);
-  window.customCards=window.customCards||[];
-  window.customCards.push({type:TYPE,name:"Fridge Card",description:"Compact vendor-neutral fridge/freezer card with configurable temperature setpoint buttons",preview:false,documentationURL:"https://github.com/Sr-0w/lovelace-fridge-card"});
+  _click(e){
+   const target=e.target.closest("[data-action]");if(!target||target.disabled)return;
+   const action=target.dataset.action;
+   if(action==="details"){this._navigate();return}
+   if(action==="step"){const key=target.dataset.key,st=this._state(key);if(!st)return;const b=this._bounds(st),value=Number(st.state);if(Number.isFinite(value))this._setTemperature(key,value+Number(target.dataset.delta)*b.step);return}
+   if(action==="toggle"){const id=this._config.entities[target.dataset.key];if(id?.startsWith("switch.")&&this._hass.states[id])Promise.resolve(this._hass.callService("switch","toggle",{entity_id:id})).catch(err=>console.error("Fridge Card: toggle",err));}
+  }
+  _render(){
+   if(!this._config||!this._hass)return;
+   const c=this._config;
+   const labels={refrigerator:"Refrigerator",freezer:"Freezer",quick_cool:"Power cool",quick_freeze:"Power freeze",ice:"Ice",doors_closed:"Doors closed",door_open:"Door open",filter:"filter",...(c.labels??{})};
+   const dial=(key,control,name)=>{
+    const state=this._state(control),sensor=this._state(key),available=!!state&&!["unknown","unavailable"].includes(state.state)&&Number.isFinite(Number(state.state))&&c.entities[control]?.startsWith("number.");
+    const b=this._bounds(state),value=available?Number(state.state):NaN,measurement=sensor&&!["unknown","unavailable"].includes(sensor.state)?this._number(key,1):"—";
+    return `<div class="temp"><div class="temp-name">${esc(name)}</div><div class="dial-frame">${available?`<ha-control-circular-slider class="temp-slider" data-key="${control}" mode="start" label="${esc(name)}" value="${value}" current="${Number(sensor?.state)||0}" min="${b.min}" max="${b.max}" step="${b.step}" prevent-interaction-on-scroll></ha-control-circular-slider><div class="fallback-track"></div>`:""}<div class="dial-info"><div class="target setpoint-val" data-key="${control}">${available?esc(this._number(control)):"—"}<span class="unit">°C</span></div><div class="actual">${esc(name)} : ${measurement} °C</div></div>${available?`<div class="dial-buttons"><button data-action="step" data-key="${control}" data-delta="-1" aria-label="${esc(name)} −" ${value<=b.min?"disabled":""}>−</button><button data-action="step" data-key="${control}" data-delta="1" aria-label="${esc(name)} +" ${value>=b.max?"disabled":""}>+</button></div>`:"<div class='empty-setpoint'>No setpoint available</div>"}</div></div>`;
+   };
+   const door=this._on("fridge_door")||this._on("freezer_door");
+   const filter=Number(this._state("filter_usage")?.state);
+   const filterInfo=this._state("filter_usage")&&Number.isFinite(filter)?` · ${Math.round(filter)}% ${esc(labels.filter)}`:"";
+   const modes=[["quick_cool","mdi:snowflake-thermometer"],["quick_freeze","mdi:snowflake-alert"],["ice","mdi:cube-outline"]].filter(([k])=>c.entities[k]);
+   this.shadowRoot.innerHTML=`<style>${CSS}</style><ha-card><div class="head"><div class="title">${esc(c.name??"Refrigerator")}</div><button class="menu" data-action="details" aria-label="Options et détails" title="Options et détails"><ha-icon icon="mdi:dots-vertical"></ha-icon></button></div><div class="dials">${dial("fridge_temperature","fridge_setpoint",labels.refrigerator)}${dial("freezer_temperature","freezer_setpoint",labels.freezer)}</div><div class="foot"><span class="${door?"warning":""}"><ha-icon icon="${door?"mdi:door-open":"mdi:door-closed"}"></ha-icon><strong>${esc(door?labels.door_open:labels.doors_closed)}</strong></span><span><ha-icon icon="mdi:flash-outline"></ha-icon><strong>${this._number("power")} W</strong>${filterInfo}</span></div>${modes.length?`<div class="modes">${modes.map(([key,icon])=>`<button class="mode ${this._on(key)?"active":""}" data-action="toggle" data-key="${key}" aria-pressed="${this._on(key)}"><ha-icon icon="${icon}"></ha-icon>${esc(labels[key])}</button>`).join("")}</div>`:""}</ha-card>`;
+   for(const slider of this.shadowRoot.querySelectorAll("ha-control-circular-slider")){
+    const key=slider.dataset.key,st=this._state(key);
+    if(!st)continue;
+    const b=this._bounds(st),isValid=Number.isFinite(Number(st.state));
+    if(isValid){slider.value=Number(st.state);slider.min=b.min;slider.max=b.max;slider.step=b.step;slider.mode="start";slider.current=Number(this._state(key==="fridge_setpoint"?"fridge_temperature":"freezer_temperature")?.state)||undefined;slider.label=key;}
+    slider.addEventListener("value-changing",ev=>{const val=ev.detail?.value;this._dragging=typeof val==="number";const txt=this.shadowRoot.querySelector(`.setpoint-val[data-key="${key}"]`);if(txt&&typeof val==="number")txt.innerHTML=`${esc(Number(val).toLocaleString(this._hass?.locale?.language??"en"))}<span class="unit">°C</span>`;});
+    slider.addEventListener("value-changed",ev=>{this._dragging=false;this._setTemperature(key,ev.detail?.value);});
+   }
+  }
+ }
+ customElements.define(TYPE,FridgeCard);
+ window.customCards=window.customCards||[];
+ window.customCards.push({type:TYPE,name:"Fridge Card",description:"Fridge & freezer card using native Home Assistant circular slider controls",preview:false,documentationURL:"https://github.com/Sr-0w/lovelace-fridge-card"});
 })();
