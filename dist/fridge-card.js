@@ -142,7 +142,8 @@
   class CardVisualEditor extends HTMLElement {
     constructor(){super();this.attachShadow({mode:"open"});this._config={type:"custom:"+TYPE};this._hass=undefined;this._rendered=false;}
     setConfig(config){this._config=JSON.parse(JSON.stringify(config??{type:"custom:"+TYPE}));this._render();}
-    set hass(hass){this._hass=hass;if(!this._rendered)this._render();else for(const form of this.shadowRoot.querySelectorAll("ha-form"))form.hass=hass;}
+    set hass(hass){this._hass=hass;if(!this._rendered)this._render();else{for(const form of this.shadowRoot.querySelectorAll("ha-form"))form.hass=hass;this._refreshProgramOptions();}}
+    _refreshProgramOptions(){if(TYPE!=="dishwasher-card")return;const idx=SPEC.findIndex(g=>g.fields.some(f=>f.kind==="multi"));if(idx<0)return;const form=this.shadowRoot.querySelector('ha-form[data-group="'+idx+'"]');if(form)form.schema=SPEC[idx].fields.map(f=>this._fieldSchema(f));}
     _options(){
       if(TYPE!=="dishwasher-card")return [];
       const id=this._config.entities?.program;
@@ -174,7 +175,9 @@
         if(f.kind==="number"&&value!=="")value=Number(value);
         put(next,f.path,value);
       }
+      const oldProgram=this._config.entities?.program;
       this._config=next;
+      if(next.entities?.program!==oldProgram)this._refreshProgramOptions();
       this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:next},bubbles:true,composed:true}));
     }
     _render(){
