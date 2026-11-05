@@ -2,7 +2,7 @@
 
 A reusable Home Assistant Lovelace card with **two side-by-side circular thermostat controls** for refrigerator and freezer, measured temperatures, door state, power usage, and optional modes. The controls reuse Home Assistant's own `ha-control-circular-slider`, `ha-big-number`, and `ha-outlined-icon-button` web components.
 
-**Status: v0.6.1 development prototype.** The UI has been tested with simulated states, but has **been installed for live Home Assistant testing; visual/device-level testing is still pending**. Please test it as a custom repository before creating a public release.
+**Status: v0.6.2 development prototype.** The UI has been tested with simulated states, but has **been installed for live Home Assistant testing; visual/device-level testing is still pending**. Please test it as a custom repository before creating a public release.
 
 ![Fridge Card concept preview](docs/preview.svg)
 
