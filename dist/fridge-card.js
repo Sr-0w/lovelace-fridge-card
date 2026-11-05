@@ -1,4 +1,4 @@
-/* Fridge Card v0.6.2-dev — native thermostat-style twin controls, MIT */
+/* Fridge Card v0.6.3-dev — precisely centered native thermostat buttons, MIT */
 (function FridgeCardNativeTwin(){
  const TYPE="fridge-card";
  if(customElements.get(TYPE))return;
@@ -26,9 +26,9 @@
   .target-fallback{font-size:26px;line-height:1.2;color:var(--secondary-text-color,#aaa)}
   .current{display:flex;align-items:center;gap:3px;color:var(--secondary-text-color,#aaa);font-size:11px;white-space:nowrap}
   .current ha-icon{--mdc-icon-size:14px}
-  .buttons{position:absolute;left:0;right:0;bottom:-1px;display:flex;justify-content:center;gap:12px;align-items:center;pointer-events:none}
-  .buttons ha-outlined-icon-button{--ha-icon-button-size:32px;--ha-outlined-icon-button-outline-color:var(--secondary-text-color,#888);pointer-events:auto;cursor:pointer}
-  .buttons ha-outlined-icon-button ha-icon{--mdc-icon-size:19px}
+  .buttons{position:absolute;left:50%;bottom:-1px;transform:translateX(-50%);width:max-content;display:grid;grid-template-columns:repeat(2,32px);gap:12px;place-items:center;pointer-events:none}
+  .buttons ha-outlined-icon-button{--ha-icon-button-size:32px;--ha-outlined-icon-button-outline-color:var(--secondary-text-color,#888);display:block;width:32px;height:32px;margin:0;padding:0;pointer-events:auto;cursor:pointer}
+  .buttons ha-outlined-icon-button ha-icon{--mdc-icon-size:20px}
   .buttons ha-outlined-icon-button[disabled]{opacity:.26;pointer-events:none}
   .metadata{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 14px 12px;color:var(--secondary-text-color,#aaa);font-size:var(--ha-font-size-xs,11px)}
   .metadata span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;min-width:0}
@@ -41,7 +41,7 @@
   .mode.active{background:var(--fridge-action);color:var(--text-primary-color,#fff)}
   .mode:focus-visible,.menu:focus-visible{outline:2px solid var(--primary-color,#ff6a00);outline-offset:1px}
   @container container (max-width:180px){.target-number{font-size:32px}.buttons{gap:9px}.buttons ha-outlined-icon-button{--ha-icon-button-size:30px}}
-  @media(max-width:360px){.twin{padding:3px 5px 3px}.buttons{gap:8px}.buttons ha-outlined-icon-button{--ha-icon-button-size:28px}.name{font-size:11px}.metadata{font-size:10px;padding:4px 10px 11px}.mode{height:53px;font-size:10px}}
+  @media(max-width:360px){.twin{padding:3px 5px 3px}.buttons{gap:8px;grid-template-columns:repeat(2,28px)}.buttons ha-outlined-icon-button{--ha-icon-button-size:28px;width:28px;height:28px}.name{font-size:11px}.metadata{font-size:10px;padding:4px 10px 11px}.mode{height:53px;font-size:10px}}
  `;
  class FridgeCard extends HTMLElement{
   constructor(){super();this.attachShadow({mode:"open"});this.shadowRoot.addEventListener("click",e=>this._click(e));this._dragging=new Set();this._pending=new Set();}
@@ -77,7 +77,7 @@
    const dial=(which)=>{
     const name=labels[which==="fridge"?"refrigerator":"freezer"],key=which+"_setpoint",measuredKey=which+"_temperature",st=this._state(key),valid=this._valid(st)&&c.entities[key]?.startsWith("number."),bounds=this._bounds(st);
     const value=valid?Number(st.state):null;
-    return `<div class="temperature"><p class="name">${esc(name)}</p><div class="container" style="--state-color:var(--fridge-action);--action-color:var(--fridge-action)">${valid?`<ha-control-circular-slider data-key="${key}" min="${bounds.min}" max="${bounds.max}" step="${bounds.step}" value="${value}" prevent-interaction-on-scroll></ha-control-circular-slider><div class="fallback"></div>`:`<div class="fallback" style="display:block"></div>`}<div class="info">${valid?`<ha-big-number class="target-number" data-key="${key}" value="${value}" unit="°C"></ha-big-number>`:`<span class="target-fallback">— °C</span>`}<p class="current"><ha-icon icon="mdi:thermometer"></ha-icon>${esc(this._num(measuredKey,1))} °C</p></div>${valid?`<div class="buttons"><ha-outlined-icon-button data-action="step" data-key="${key}" data-delta="-1" label="${esc(name)} −" aria-label="${esc(name)} −" ${value<=bounds.min?"disabled":""}><ha-icon icon="mdi:minus"></ha-icon></ha-outlined-icon-button><ha-outlined-icon-button data-action="step" data-key="${key}" data-delta="1" label="${esc(name)} +" aria-label="${esc(name)} +" ${value>=bounds.max?"disabled":""}><ha-icon icon="mdi:plus"></ha-icon></ha-outlined-icon-button></div>`:""}</div></div>`;
+    return `<div class="temperature"><p class="name">${esc(name)}</p><div class="container" style="--state-color:var(--fridge-action);--action-color:var(--fridge-action)">${valid?`<ha-control-circular-slider data-key="${key}" min="${bounds.min}" max="${bounds.max}" step="${bounds.step}" value="${value}" prevent-interaction-on-scroll></ha-control-circular-slider><div class="fallback"></div>`:`<div class="fallback" style="display:block"></div>`}<div class="info">${valid?`<ha-big-number class="target-number" data-key="${key}" value="${value}" unit="°C"></ha-big-number>`:`<span class="target-fallback">— °C</span>`}<p class="current"><ha-icon icon="mdi:thermometer"></ha-icon>${esc(this._num(measuredKey,1))} °C</p></div>${valid?`<div class="buttons"><ha-outlined-icon-button data-action="step" data-icon="minus" data-key="${key}" data-delta="-1" label="${esc(name)} −" aria-label="${esc(name)} −" ${value<=bounds.min?"disabled":""}></ha-outlined-icon-button><ha-outlined-icon-button data-action="step" data-icon="plus" data-key="${key}" data-delta="1" label="${esc(name)} +" aria-label="${esc(name)} +" ${value>=bounds.max?"disabled":""}></ha-outlined-icon-button></div>`:""}</div></div>`;
    };
    const door=this._on("fridge_door")||this._on("freezer_door"),f=this._state("filter_usage"),filter=this._valid(f)?` · ${esc(labels.filter)} ${Math.round(Number(f.state))} %`:"";
    const modes=[["quick_cool","mdi:snowflake-thermometer"],["quick_freeze","mdi:snowflake-alert"],["ice","mdi:cube-outline"]].filter(([k])=>c.entities[k]);
@@ -96,6 +96,9 @@
     });
     slider.addEventListener("value-changed",ev=>{this._dragging.delete(key);this._setValue(key,ev.detail?.value);});
    }
+   // Use the native ha-icon-button path property, as HA thermostats do.
+   const iconPaths={minus:"M19,13H5V11H19V13Z",plus:"M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"};
+   for(const button of this.shadowRoot.querySelectorAll("ha-outlined-icon-button[data-icon]")){button.path=iconPaths[button.dataset.icon];}
    for(const number of this.shadowRoot.querySelectorAll("ha-big-number")){
     const key=number.dataset.key,st=this._state(key);
     if(this._valid(st)){number.value=Number(st.state);number.unit="°C";number.formatOptions={maximumFractionDigits:0,minimumFractionDigits:0};}
