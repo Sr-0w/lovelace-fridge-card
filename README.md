@@ -2,7 +2,7 @@
 
 A Home Assistant-themed Lovelace card with two native circular temperature sliders for fridge/freezer setpoints, measured temperatures, door status, power usage and optional segmented appliance modes.
 
-**Status: v0.4.0 development prototype.** The UI has been tested with simulated states, but has **been installed for live Home Assistant testing; visual/device-level testing is still pending**. Please test it as a custom repository before creating a public release.
+**Status: v0.4.1 development prototype.** The UI has been tested with simulated states, but has **been installed for live Home Assistant testing; visual/device-level testing is still pending**. Please test it as a custom repository before creating a public release.
 
 ![Fridge Card concept preview](docs/preview.svg)
 
@@ -33,18 +33,13 @@ entities:
   quick_cool: switch.my_fridge_power_cool
   quick_freeze: switch.my_freezer_power_freeze
   ice: switch.my_ice_maker
-fridge_warn: 7
-fridge_caution: 5
-freezer_warn: -15
 labels:
   refrigerator: Réfrigérateur
   freezer: Congélateur
   setpoint: Consigne
-  normal: Normal
-  alert: Alerte
-  caution: À surveiller
   door_open: Porte ouverte
   doors_closed: Portes fermées
+  filter: Filtre
   quick_cool: Froid+
   quick_freeze: Congél+
   ice: Glaçons
