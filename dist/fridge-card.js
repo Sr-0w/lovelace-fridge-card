@@ -1,4 +1,4 @@
-/* Fridge Card v0.2.0-dev — MIT */
+/* Fridge Card v0.3.0-dev — thermostat-style modes; MIT */
 (function FridgeCardV2(){
   const TYPE="fridge-card";
   if(customElements.get(TYPE))return;
@@ -23,10 +23,14 @@
     .step:disabled{opacity:.26;cursor:not-allowed}.step:not(:disabled):active{transform:scale(.94);background:color-mix(in srgb,var(--fc-blue) 12%,var(--card-background-color,#222))}
     .metrics{display:flex;justify-content:space-between;gap:7px;padding:0 13px 12px;color:var(--secondary-text-color,#aaa);font-size:11px}
     .metric{display:flex;align-items:center;gap:5px;min-width:0;white-space:nowrap}.metric strong{color:var(--primary-text-color,#eee);font-weight:650}.metric.alert strong{color:var(--fc-red)}
-    .actions{padding:9px 12px 11px;border-top:1px solid var(--divider-color,#353535);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
-    .action{height:42px;display:flex;align-items:center;justify-content:center;gap:4px;background:var(--secondary-background-color,#292929);border:1px solid var(--divider-color,#454545);border-radius:9px;color:var(--secondary-text-color,#aaa);font-family:inherit;font-size:11px;font-weight:650;cursor:pointer;white-space:nowrap}
-    .action.active{color:var(--fc-green);background:color-mix(in srgb,var(--fc-green) 12%,var(--secondary-background-color,#292929));border-color:color-mix(in srgb,var(--fc-green) 28%,transparent)}
-    .action:disabled{opacity:.35}.action:active{transform:scale(.98)}
+
+    .actions{margin:1px 12px 12px;padding:4px;background:var(--secondary-background-color,#292929);border:1px solid var(--divider-color,#3b3b3b);border-radius:13px;display:flex;gap:3px;overflow:hidden}
+    .action{height:57px;flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:0;border-radius:10px;background:transparent;color:var(--secondary-text-color,#c0c0c0);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background-color .15s,color .15s,transform .12s}
+    .action ha-icon{--mdc-icon-size:23px!important}
+    .action.active{color:#fff;background:var(--fc-active-color,#ff6a00);box-shadow:0 2px 7px rgba(0,0,0,.14)}
+    .action:disabled{opacity:.35;cursor:not-allowed}
+    .action:focus-visible{outline:2px solid var(--primary-color,#ff6a00);outline-offset:-2px}
+    .action:active{transform:scale(.98)}
     @media(max-width:355px){.hero{gap:6px;padding:9px}.tempblock{padding:8px 6px}.tempval{font-size:25px}.step{height:26px;min-width:25px}.setpoint-value{font-size:11px}.action{font-size:10px;gap:2px}.metrics{font-size:10px}}
   `;
   class FridgeCard extends HTMLElement{
