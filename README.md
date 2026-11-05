@@ -2,7 +2,7 @@
 
 A compact, device-agnostic Lovelace card with an appliance illustration, fridge/freezer temperatures, door status, instant power, filter usage, and up to three optional switch controls.
 
-**Status: 0.1.0 development prototype.** The UI has been tested with simulated states, but has **not yet been validated on a live Home Assistant instance**. Please test it as a custom repository before creating a public release.
+**Status: 0.1.0 development prototype.** The UI has been tested with simulated states, but has **been installed for live Home Assistant testing; visual/device-level testing is still pending**. Please test it as a custom repository before creating a public release.
 
 ![Fridge Card concept preview](docs/preview.svg)
 
@@ -49,6 +49,8 @@ labels:
   quick_freeze: Congél+
   ice: Glaçons
 ```
+
+The three optional Power cool / Power freeze / Ice switches appear as a **thermostat-style segmented control** with an orange background for each active switch. They are independent switches: selecting one does not automatically disable another.
 
 Only `fridge_temperature` **or** `freezer_temperature` is required. All other entities are optional; absent controls are hidden. Setpoint controls appear when the optional `fridge_setpoint` and/or `freezer_setpoint` mapping points to a Home Assistant `number.*` entity. The **− / +** buttons read that entity's `min`, `max` and `step` attributes, and call `number.set_value` only after the user presses a button. They do not change temperatures automatically. Door binary sensors are expected to be `on` when open, and the optional filter sensor must report **percentage used**. Power is shown in watts. `quick_cool`, `quick_freeze`, and `ice` must be switch entities.
 
