@@ -179,8 +179,8 @@
     }
     _render(){
       if(!this.isConnected&&!this._hass)return;
-      const html=SPEC.map((group,i)=>'<details '+(i===0||i===1?'open':'')+'><summary>'+group.title+'</summary><div class="content"><ha-form data-group="'+i+'"></ha-form></div></details>').join("");
-      this.shadowRoot.innerHTML='<style>:host{display:block;color:var(--primary-text-color)}details{border:1px solid var(--divider-color);border-radius:var(--ha-border-radius-md,10px);margin:8px 0;overflow:hidden}summary{padding:14px;font-size:14px;font-weight:600;cursor:pointer;background:var(--secondary-background-color)}.content{padding:14px}ha-form{display:block}ha-form::part(root){display:block}summary:focus-visible{outline:2px solid var(--primary-color)}</style>'+html;
+      const html=SPEC.map((group,i)=>{const colors=group.fields.filter(f=>f.kind==="color").map(f=>'<label class="palette"><span>'+f.label+'</span><input type="color" data-color="'+f.path+'" value="'+safeColor(get(this._config,f.path)??f.default)+'" aria-label="'+f.label+'"></label>').join("");return '<details '+(i===0||i===1?"open":"")+'><summary>'+group.title+'</summary><div class="content"><ha-form data-group="'+i+'"></ha-form>'+(colors?'<div class="colors"><strong>Palette — sélectionner une couleur</strong><div class="color-grid">'+colors+'</div><small>Les champs texte au-dessus acceptent aussi les variables CSS du thème.</small></div>':"")+'</div></details>';}).join("");
+      this.shadowRoot.innerHTML='<style>:host{display:block;color:var(--primary-text-color)}details{border:1px solid var(--divider-color);border-radius:var(--ha-border-radius-md,10px);margin:8px 0;overflow:hidden}summary{padding:14px;font-size:14px;font-weight:600;cursor:pointer;background:var(--secondary-background-color)}.content{padding:14px}ha-form{display:block}ha-form::part(root){display:block}.colors{padding-top:15px;margin-top:10px;border-top:1px solid var(--divider-color)}.colors>strong{font-size:12px}.colors small{display:block;color:var(--secondary-text-color);font-size:11px;margin-top:10px}.color-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}.palette{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px}.palette input{width:40px;height:32px;padding:0;border:0;cursor:pointer;background:transparent}summary:focus-visible{outline:2px solid var(--primary-color)}</style>'+html;
       this._rendered=true;
       SPEC.forEach((group,i)=>{
         const form=this.shadowRoot.querySelector('ha-form[data-group="'+i+'"]');
@@ -191,6 +191,7 @@
         form.computeLabel=schema=>group.fields.find(f=>toKey(f.path)===schema.name)?.label??schema.name;
         form.computeHelper=schema=>group.fields.find(f=>toKey(f.path)===schema.name)?.help;
         form.addEventListener("value-changed",ev=>{ev.stopPropagation();if(ev.detail?.value&&typeof ev.detail.value==="object")this._onForm(group,ev.detail.value);});
+        for(const input of this.shadowRoot.querySelectorAll("input[data-color]")){if(!group.fields.some(f=>f.path===input.dataset.color))continue;input.addEventListener("input",()=>{const field=group.fields.find(f=>f.path===input.dataset.color),value=input.value;form.data={...(form.data??{}),[toKey(field.path)]:value};this._onForm({fields:[field]},{[toKey(field.path)]:value});});}
       });
     }
     connectedCallback(){if(!this._rendered)this._render();}
