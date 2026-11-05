@@ -1,8 +1,8 @@
 # Fridge Card for Home Assistant
 
-A Home Assistant-themed Lovelace card with two native circular temperature sliders for fridge/freezer setpoints, measured temperatures, door status, power usage and optional segmented appliance modes.
+A Home Assistant-themed Lovelace card with **one large native circular temperature slider** and a two-tab fridge/freezer compartment selector, plus measured temperatures, door status, power usage, and optional segmented appliance modes.
 
-**Status: v0.4.1 development prototype.** The UI has been tested with simulated states, but has **been installed for live Home Assistant testing; visual/device-level testing is still pending**. Please test it as a custom repository before creating a public release.
+**Status: v0.5.0 development prototype.** The UI has been tested with simulated states, but has **been installed for live Home Assistant testing; visual/device-level testing is still pending**. Please test it as a custom repository before creating a public release.
 
 ![Fridge Card concept preview](docs/preview.svg)
 
@@ -47,7 +47,7 @@ labels:
 
 The three optional Power cool / Power freeze / Ice switches appear as a **thermostat-style segmented control** with an orange background for each active switch. They are independent switches: selecting one does not automatically disable another.
 
-Only `fridge_temperature` **or** `freezer_temperature` is required. All other entities are optional; absent controls are hidden. Temperature dials appear when the optional `fridge_setpoint` and/or `freezer_setpoint` mapping points to a Home Assistant `number.*` entity. The card reuses Home Assistant's frontend `<ha-control-circular-slider>` with the `min`, `max`, and `step` limits from that number entity; a small dot marks the measured temperature. Changes are sent using `number.set_value` **only after the user releases the slider**. The matching −/+ controls also change the setpoint one supported step at a time; no device is changed automatically. Door binary sensors are expected to be `on` when open, and the optional filter sensor must report **percentage used**. Power is shown in watts. `quick_cool`, `quick_freeze`, and `ice` must be switch entities.
+Only `fridge_temperature` **or** `freezer_temperature` is required. All other entities are optional; absent controls are hidden. Select **Refrigerator** or **Freezer** at the top of the card to choose which setpoint is shown in the full-width thermostat-style dial. Temperature control appears when the corresponding optional `fridge_setpoint` or `freezer_setpoint` mapping points to a Home Assistant `number.*` entity. The card reuses Home Assistant's frontend `<ha-control-circular-slider>` with the `min`, `max`, and `step` limits from that number entity; a small dot marks the measured temperature. Changes are sent using `number.set_value` **only after the user releases the slider**. The matching −/+ controls also change the setpoint one supported step at a time; no device is changed automatically. Door binary sensors are expected to be `on` when open, and the optional filter sensor must report **percentage used**. Power is shown in watts. `quick_cool`, `quick_freeze`, and `ice` must be switch entities.
 
 The configurable `detail_path` links to an **existing** Home Assistant view; the card does not create that view. With no detail path, the button opens entity more-info.
 
