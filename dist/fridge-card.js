@@ -1,4 +1,4 @@
-/* Fridge Card v0.6.1-dev — native thermostat-style twin controls, MIT */
+/* Fridge Card v0.6.2-dev — native thermostat-style twin controls, MIT */
 (function FridgeCardNativeTwin(){
  const TYPE="fridge-card";
  if(customElements.get(TYPE))return;
@@ -23,6 +23,7 @@
   .info>*{margin:0}
   .target-number{font-size:clamp(26px,7.4cqw,39px);letter-spacing:0;max-width:92%;white-space:nowrap}
   .target-fallback{font-size:31px;line-height:1.1;font-weight:400}
+  .target-fallback{font-size:26px;line-height:1.2;color:var(--secondary-text-color,#aaa)}
   .current{display:flex;align-items:center;gap:3px;color:var(--secondary-text-color,#aaa);font-size:11px;white-space:nowrap}
   .current ha-icon{--mdc-icon-size:14px}
   .buttons{position:absolute;left:0;right:0;bottom:-1px;display:flex;justify-content:center;gap:12px;align-items:center;pointer-events:none}
@@ -76,7 +77,7 @@
    const dial=(which)=>{
     const name=labels[which==="fridge"?"refrigerator":"freezer"],key=which+"_setpoint",measuredKey=which+"_temperature",st=this._state(key),valid=this._valid(st)&&c.entities[key]?.startsWith("number."),bounds=this._bounds(st);
     const value=valid?Number(st.state):null;
-    return `<div class="temperature"><p class="name">${esc(name)}</p><div class="container" style="--state-color:var(--fridge-action);--action-color:var(--fridge-action)">${valid?`<ha-control-circular-slider data-key="${key}" min="${bounds.min}" max="${bounds.max}" step="${bounds.step}" value="${value}" prevent-interaction-on-scroll></ha-control-circular-slider><div class="fallback"></div>`:`<div class="fallback" style="display:block"></div>`}<div class="info"><ha-big-number class="target-number" data-key="${key}" value="${value??0}" unit="°C"></ha-big-number><p class="current"><ha-icon icon="mdi:thermometer"></ha-icon>${esc(this._num(measuredKey,1))} °C</p></div>${valid?`<div class="buttons"><ha-outlined-icon-button data-action="step" data-key="${key}" data-delta="-1" label="${esc(name)} −" aria-label="${esc(name)} −" ${value<=bounds.min?"disabled":""}><ha-icon icon="mdi:minus"></ha-icon></ha-outlined-icon-button><ha-outlined-icon-button data-action="step" data-key="${key}" data-delta="1" label="${esc(name)} +" aria-label="${esc(name)} +" ${value>=bounds.max?"disabled":""}><ha-icon icon="mdi:plus"></ha-icon></ha-outlined-icon-button></div>`:""}</div></div>`;
+    return `<div class="temperature"><p class="name">${esc(name)}</p><div class="container" style="--state-color:var(--fridge-action);--action-color:var(--fridge-action)">${valid?`<ha-control-circular-slider data-key="${key}" min="${bounds.min}" max="${bounds.max}" step="${bounds.step}" value="${value}" prevent-interaction-on-scroll></ha-control-circular-slider><div class="fallback"></div>`:`<div class="fallback" style="display:block"></div>`}<div class="info">${valid?`<ha-big-number class="target-number" data-key="${key}" value="${value}" unit="°C"></ha-big-number>`:`<span class="target-fallback">— °C</span>`}<p class="current"><ha-icon icon="mdi:thermometer"></ha-icon>${esc(this._num(measuredKey,1))} °C</p></div>${valid?`<div class="buttons"><ha-outlined-icon-button data-action="step" data-key="${key}" data-delta="-1" label="${esc(name)} −" aria-label="${esc(name)} −" ${value<=bounds.min?"disabled":""}><ha-icon icon="mdi:minus"></ha-icon></ha-outlined-icon-button><ha-outlined-icon-button data-action="step" data-key="${key}" data-delta="1" label="${esc(name)} +" aria-label="${esc(name)} +" ${value>=bounds.max?"disabled":""}><ha-icon icon="mdi:plus"></ha-icon></ha-outlined-icon-button></div>`:""}</div></div>`;
    };
    const door=this._on("fridge_door")||this._on("freezer_door"),f=this._state("filter_usage"),filter=this._valid(f)?` · ${esc(labels.filter)} ${Math.round(Number(f.state))} %`:"";
    const modes=[["quick_cool","mdi:snowflake-thermometer"],["quick_freeze","mdi:snowflake-alert"],["ice","mdi:cube-outline"]].filter(([k])=>c.entities[k]);
