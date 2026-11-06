@@ -1,81 +1,78 @@
-# Fridge Card — Configuration guide
+# Fridge Card — configuration reference
 
-## Native visual editor
+Everything below can be set in the visual editor.
 
-Open **Home Assistant → Dashboard → Edit → Fridge Card → Edit**. The card now implements `getConfigElement()` with a native `ha-form` editor, searchable entity pickers, color swatches, and expandable groups. There is no need to edit YAML for normal configuration.
+## General
 
-The editor is divided into **General**, **Entities**, **Colors and appearance**, **Modes**, and **Labels and thresholds**. Existing YAML settings and unrecognized settings are preserved.
+| Option | Default | Description |
+| --- | --- | --- |
+| `device` | — | Device id. Its entities are discovered automatically. |
+| `name` | device name | Title of the card. |
+| `detail_path` | — | View opened by the ⋮ button. Without it, it opens the more-info dialog of a temperature entity. |
+| `temperature_unit` | `°C` | Unit shown when an entity has none. |
 
-### Supported entities
+## Entities
 
-| Key | Domain | Function |
-|---|---|---|
-| `entities.fridge_temperature` | sensor | Actual fridge temperature |
-| `entities.fridge_setpoint` | number | Fridge setpoint, native circular control and ± buttons |
-| `entities.freezer_temperature` | sensor | Actual freezer temperature |
-| `entities.freezer_setpoint` | number | Freezer setpoint |
-| `entities.fridge_door`, `entities.freezer_door` | binary_sensor | Door-open alert (`on` = open) |
-| `entities.power` | sensor | Current consumption (W) |
-| `entities.filter_usage` | sensor | Filter usage in percent |
-| `entities.quick_cool`, `entities.quick_freeze`, `entities.ice` | switch | Optional power/ice modes |
+All optional when `device` is set; the ones you set override discovery. At
+least one temperature or setpoint is needed.
 
-At least one temperature sensor is required. Other entities are optional, and absent controls disappear.
+| Key | Domain | Used for |
+| --- | --- | --- |
+| `fridge_temperature`, `freezer_temperature` | sensor | Measured temperature. |
+| `fridge_setpoint`, `freezer_setpoint` | number, input_number, climate | Target temperature: dial and − / + buttons. A climate entity also gives the measured temperature. |
+| `fridge_door`, `freezer_door`, `door` | binary_sensor | `on` when open. |
+| `power` | sensor | Power. |
+| `filter_usage` | sensor (%) | Filter used. |
+| `filter_life` | sensor (%) | Filter life left (shown as used = 100 − left). |
+| `filter_alert` | binary_sensor | *Replace filter* when `on`. |
+| `quick_cool`, `quick_freeze`, `ice` | switch, input_boolean | Mode buttons. |
 
-### Cooling arc direction
+## Display
 
-The native Home Assistant circular slider defaults to **cooling arc mode** (`appearance.cooling_arc: true`), using its built-in `mode="end"`. The filled track runs **from the target toward the warmer maximum**, and the highlighted interval represents cooling demand when the measured temperature is warmer than the target. The slider still reads and writes the **actual numeric temperature**: the + button increases the temperature setpoint (e.g. −19 → −18 °C), and − decreases it (−19 → −20 °C). Nothing reverses the number entity or its service call. Disable **Cooling arc** in the card editor if using this card with a system requiring a heating-style track (`mode="start"`).
+`show_header`, `show_measured`, `show_doors`, `show_power`, `show_filter`,
+`show_modes`: all `true` by default. Parts without an entity are hidden anyway.
 
-### Colors, dimensions, information
+## Modes
 
-Configure `colors.accent` (active buttons), `colors.fridge`, `colors.freezer` (circular arcs), `colors.track`, `colors.text`, `colors.warning`, and `colors.caution`. Use the color picker for hex colors, or type a CSS theme variable such as `var(--primary-color)` in the text field.
+| Option | Description |
+| --- | --- |
+| `mode_icons.quick_cool` / `.quick_freeze` / `.ice` | Icons of the built-in modes. |
+| `mode_order` | Comma-separated order, e.g. `ice,quick_cool,quick_freeze`. |
+| `extra_modes` | List of `{entity, label, icon}` for more switches. |
 
-`appearance.dial_size` is the maximum diameter in pixels (default 300; constrained by column width), `appearance.dial_gap` the space between both dials (default 0), `appearance.button_size` the ± controls diameter (default 32), `appearance.mode_height` the mode strip button height (default 57), and `appearance.mode_icon_size` the mode icon size (default 22). The dashboard uses automatic grid height.
+## Alerts
 
-Visibility options: `show_header`, `show_measured`, `show_doors`, `show_power`, `show_filter`, `show_modes` (all true unless explicitly false).
+| Option | Default (°C / °F) | Meaning |
+| --- | --- | --- |
+| `fridge_warn` | 7 / 45 | Refrigerator *too warm* above this. |
+| `fridge_caution` | 5 / 41 | Refrigerator *to watch* above this. |
+| `freezer_warn` | −15 / 5 | Freezer *too warm* above this. |
 
-`temperature_unit` overrides the default `°C`; each entity's `unit_of_measurement` attribute takes priority. Adjust `fridge_caution` (5 by default), `fridge_warn` (7), and `freezer_warn` (-15) in the same units as their sensors.
+Values are in the unit of your sensors. The defaults follow it.
 
-### Generic extra modes
+## Colours
 
-The visual editor accepts one extra mode per line in this form:
+Theme colour name (`light-blue`, `primary`…), hex colour or `var(--…)`.
 
-```text
-switch.my_fridge_eco | Eco | mdi:leaf
-input_boolean.special_mode | Special | mdi:star
-```
+| Option | Default | Used for |
+| --- | --- | --- |
+| `colors.accent` | theme primary colour | Dials and active modes |
+| `colors.fridge`, `colors.freezer` | `colors.accent` | One dial |
+| `colors.track` | disabled colour | Dial track |
+| `colors.text` | primary text | Setpoint numbers |
+| `colors.warning` | error colour | Door open, too warm, filter |
+| `colors.caution` | warning colour | To watch |
 
-Equivalent YAML:
+## Layout
 
-```yaml
-extra_modes:
-  - entity: switch.my_fridge_eco
-    label: Eco
-    icon: mdi:leaf
-```
+`appearance.dial_size` (300 px max), `appearance.dial_gap` (0 px),
+`appearance.button_size` (32 px), `appearance.mode_height` (57 px),
+`appearance.mode_icon_size` (22 px), `appearance.cooling_arc` (`true`: the arc
+fills from the setpoint towards warmer temperatures, like a cooling
+thermostat; `false` fills from the minimum).
 
-These additional modes are toggle actions on `switch` or `input_boolean` entities. Configure the three built-in modes through their own entity pickers. You may change their names under `labels`, icons under `mode_icons`, or the display order with a CSV `mode_order` such as `ice,quick_cool,quick_freeze`.
+## Texts
 
-### Example
-
-```yaml
-type: custom:fridge-card
-name: Réfrigérateur
-detail_path: /dashboard-maison/cuisine-frigo
-entities:
-  fridge_temperature: sensor.my_fridge_temperature
-  freezer_temperature: sensor.my_freezer_temperature
-  fridge_setpoint: number.my_fridge_target
-  freezer_setpoint: number.my_freezer_target
-  fridge_door: binary_sensor.my_fridge_door
-  power: sensor.my_fridge_power
-colors:
-  accent: "#FF6A00"
-  fridge: "#009FCA"
-  freezer: "#00BCD4"
-appearance:
-  dial_gap: 5
-  button_size: 32
-show_filter: false
-```
-
-All setpoint changes are explicit user actions via `number.set_value`. The card uses Home Assistant's own internal `ha-control-circular-slider`, `ha-big-number`, and `ha-outlined-icon-button`; cross-version compatibility is still under testing.
+`labels.<key>` overrides any text: `refrigerator`, `freezer`, `quick_cool`,
+`quick_freeze`, `ice`, `doors_closed`, `door_open`, `filter`, `filter_replace`,
+`attention`, `caution`, `details`, `measured`, `unavailable`.
