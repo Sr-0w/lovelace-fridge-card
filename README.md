@@ -5,7 +5,10 @@ dial per compartment, built from Home Assistant's own thermostat controls, with
 doors, temperature alerts, filter, power and quick modes (power cool, power
 freeze, ice maker…).
 
-![Fridge Card](docs/preview.png)
+<p align="center">
+  <img src="docs/preview-light.png" alt="Fridge Card, light theme" width="400">
+  <img src="docs/preview-dark.png" alt="Fridge Card, dark theme" width="400">
+</p>
 
 ## Features
 
@@ -67,6 +70,8 @@ Copy `dist/fridge-card.js` to `config/www/`, then add `/local/fridge-card.js`
 as a **JavaScript module** in **Settings → Dashboards → ⋮ → Resources**.
 
 ## Configuration
+
+<img src="docs/editor.png" alt="Fridge Card editor" width="320" align="right">
 
 Add the card from the dashboard editor (search for *Fridge*) and pick your
 refrigerator.

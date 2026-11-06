@@ -535,7 +535,7 @@
   ];
   const SHOW = ["show_header", "show_measured", "show_doors", "show_power", "show_filter", "show_modes"];
   const COLORS = [["accent", "primary"], ["fridge", ""], ["freezer", ""], ["track", ""], ["text", ""], ["warning", "red"], ["caution", "amber"]];
-  const LAYOUT = [["dial_size", 120, 500, 10], ["dial_gap", 0, 40, 1], ["button_size", 24, 60, 1], ["mode_height", 30, 110, 1], ["mode_icon_size", 12, 44, 1]];
+  const LAYOUT = [["dial_size", 120, 500, 10, 300], ["dial_gap", 0, 40, 1, 0], ["button_size", 24, 60, 1, 32], ["mode_height", 30, 110, 1, 57], ["mode_icon_size", 12, 44, 1, 22]];
   const EXTRA_ROWS = 4;
 
   class FridgeCardEditor extends HTMLElement {
@@ -560,11 +560,13 @@
           schema: [
             { type: "grid", name: "", schema: ["quick_cool", "quick_freeze", "ice"].map((k) => ({ name: `mi__${k}`, selector: { icon: { placeholder: MODE_ICONS[k] } } })) },
             { name: "mode_order", selector: { text: {} } },
-            ...Array.from({ length: extras }, (_, i) => ({ type: "grid", name: "", column_min_width: "120px", schema: [
+            ...Array.from({ length: extras }, (_, i) => [
               { name: `xm${i}__entity`, selector: { entity: { filter: { domain: ["switch", "input_boolean"] } } } },
-              { name: `xm${i}__label`, selector: { text: {} } },
-              { name: `xm${i}__icon`, selector: { icon: {} } },
-            ] })),
+              { type: "grid", name: "", schema: [
+                { name: `xm${i}__label`, selector: { text: {} } },
+                { name: `xm${i}__icon`, selector: { icon: {} } },
+              ] },
+            ]).flat(),
           ] },
         { type: "expandable", name: "colors", title: this._e("sec_colors"), icon: "mdi:palette-outline",
           schema: [{ type: "grid", name: "", schema: COLORS.map(([k, def]) => ({ name: k, selector: { ui_color: def ? { default_color: def } : {} } })) }] },
@@ -583,9 +585,11 @@
     _data() {
       const c = this._config, data = { ...c };
       for (const k of SHOW) data[k] = c[k] ?? true;
+      // Show what the device provides, so the fields are not empty when only `device` is set.
+      if (c.device) data.entities = { ...detectEntities(this._hass, c.device), ...(c.entities ?? {}) };
       for (const k of ["quick_cool", "quick_freeze", "ice"]) data[`mi__${k}`] = c.mode_icons?.[k] ?? "";
       (c.extra_modes ?? []).forEach((m, i) => { data[`xm${i}__entity`] = m.entity; data[`xm${i}__label`] = m.label ?? ""; data[`xm${i}__icon`] = m.icon ?? ""; });
-      for (const [k] of LAYOUT) data[`ap__${k}`] = c.appearance?.[k];
+      for (const [k, , , , def] of LAYOUT) data[`ap__${k}`] = c.appearance?.[k] ?? def;
       data.ap__cooling_arc = c.appearance?.cooling_arc ?? true;
       return data;
     }
@@ -624,7 +628,7 @@
       }
       if (extra.length) next.extra_modes = extra; else delete next.extra_modes;
       const appearance = { ...(prev.appearance ?? {}) };
-      for (const [k] of LAYOUT) { if (v[`ap__${k}`] == null || v[`ap__${k}`] === "") delete appearance[k]; else appearance[k] = v[`ap__${k}`]; }
+      for (const [k, , , , def] of LAYOUT) { const x = v[`ap__${k}`]; if (x == null || x === "" || x === def) delete appearance[k]; else appearance[k] = x; }
       if (v.ap__cooling_arc === false) appearance.cooling_arc = false; else delete appearance.cooling_arc;
       if (Object.keys(appearance).length) next.appearance = appearance; else delete next.appearance;
       for (const k of ["entities", "colors", "labels"]) {
@@ -656,7 +660,7 @@
       this._form.hass = this._hass;
       this._form.schema = this._schema();
       this._form.data = this._data();
-      const alert = this.shadowRoot.getElementById("alert"), e = this._config.entities ?? {};
+      const alert = this.shadowRoot.getElementById("alert"), e = this._config.device ? { ...detectEntities(this._hass, this._config.device), ...(this._config.entities ?? {}) } : this._config.entities ?? {};
       if (this._config.device) {
         const any = ["fridge_temperature", "freezer_temperature", "fridge_setpoint", "freezer_setpoint"].some((k) => e[k]);
         alert.innerHTML = !any ? `<ha-alert alert-type="warning">${esc(this._e("missing"))}</ha-alert>`
