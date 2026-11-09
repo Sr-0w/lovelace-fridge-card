@@ -28,8 +28,9 @@ freeze, ice maker…).
   plus any extra switch you add (vacation, eco…).
 - **Visual editor** with Home Assistant's own pickers: device, entities, theme
   colours, icons, sliders. No YAML needed.
-- **Translations:** English, French, German, Dutch, Spanish, Italian (every text
-  can be overridden).
+- **Translations:** The card supports English, French, German, Dutch, Spanish
+  and Italian (every text can be overridden). The visual editor is currently
+  available in English and French only; other languages fall back to English.
 
 ## Compatibility
 
